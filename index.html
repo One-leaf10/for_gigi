@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Atrapa Corazones Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(#ff8fab,#ff4d6d);height:100vh;overflow:hidden;font-family:sans-serif;touch-action:none;transition:background 1s}
+#top{display:flex;justify-content:space-between;position:absolute;top:0;width:100%;padding:12px 15px;color:white;font-weight:bold;font-size:18px;z-index:10;text-shadow:0 2px 5px rgba(0,0,0,.3)}
+#basket{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);font-size:52px;z-index:5;transition:font-size .5s}
+.item{position:absolute;top:-60px;font-size:32px;user-select:none;animation:fall linear}
+@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+#overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;color:white;text-align:center;padding:20px}
+#overlay h1{font-size:42px} #overlay p{margin-top:8px;font-size:18px;opacity:.9}
+button{padding:14px 36px;font-size:19px;border:none;border-radius:30px;background:white;color:#ff4d6d;font-weight:bold;margin-top:18px}
+#share{margin-top:12px;background:transparent;border:2px solid white;color:white;padding:10px 24px;font-size:15px;display:none}
+.msg{position:absolute;color:white;font-weight:bold;text-shadow:0 2px 4px #000;animation:up 1s forwards;pointer-events:none}
+@keyframes up{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-60px);opacity:0}}
+</style>
+</head>
+<body>
+<div id="top"><div id="score">❤️ 0</div><div id="best">Récord: 0</div><div id="lives">💔💔💔💔💔</div></div>
+<div id="basket">🧺</div>
+
+<div id="overlay">
+<h1 id="title">Atrapa Corazones</h1>
+<p id="sub">❤️ = +1 punto<br>⭐ = +5 + vida<br>💣 = -1 vida<br>Cada 20 pts más rápido</p>
+<p id="final"></p>
+<button onclick="startGame()">JUGAR</button>
+<button id="share" onclick="shareScore()">COMPARTIR MI SCORE</button>
+</div>
+
+<script>
+let score=0,lost=0,playing=false,best=localStorage.getItem('best')||0,level=1,basket=document.getElementById('basket'),interval;
+
+document.getElementById('best').innerText='Récord: '+best;
+
+function startGame(){
+score=0;lost=0;level=1;playing=true;
+document.getElementById('overlay').style.display='none';
+document.getElementById('share').style.display='none';
+updateUI(); clearInterval(interval);
+spawnLoop();
+moveBasket();
+}
+
+function spawnLoop(){
+clearInterval(interval);
+let speed=Math.max(300, 700 - level*60);
+interval=setInterval(createItem, speed);
+}
+
+function createItem(){
+if(!playing) return;
+let r=Math.random();
+let type='heart';
+if(r>0.85) type='bomb';
+else if(r>0.70) type='star';
+
+let el=document.createElement('div'); el.className='item';
+if(type==='heart'){el.innerHTML='❤️'; el.dataset.type='heart'}
+if(type==='star'){el.innerHTML='⭐'; el.dataset.type='star'; el.style.fontSize='38px'}
+if(type==='bomb'){el.innerHTML='💣'; el.dataset.type='bomb'}
+
+el.style.left=Math.random()*85+'vw';
+el.style.animationDuration=(1.5+Math.random()*1.5)+'s';
+document.body.appendChild(el);
+
+let check=setInterval(()=>{
+if(!playing){clearInterval(check); el.remove(); return;}
+let er=el.getBoundingClientRect(); let br=basket.getBoundingClientRect();
+if(er.bottom>br.top && er.left<br.right && er.right>br.left){
+ if(type==='heart'){score+=1; popText('+1',er.left,
