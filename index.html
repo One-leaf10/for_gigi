@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Atrapa Corazones Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lluvia de buena suerte</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:linear-gradient(#ff8fab,#ff4d6d);height:100vh;overflow:hidden;font-family:sans-serif;touch-action:none;transition:background 1s}
+body{background:linear-gradient(#ff8fab,#ff4d6d);height:100vh;overflow:hidden;font-family:sans-serif;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:background 1s}
 #top{display:flex;justify-content:space-between;position:absolute;top:0;width:100%;padding:12px 15px;color:white;font-weight:bold;font-size:18px;z-index:10;text-shadow:0 2px 5px rgba(0,0,0,.3)}
-#basket{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);font-size:52px;z-index:5;transition:font-size .5s}
+#basket{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);font-size:52px;z-index:5;will-change:left}
 .item{position:absolute;top:-60px;font-size:32px;user-select:none;animation:fall linear}
 @keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
 #overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;color:white;text-align:center;padding:20px}
@@ -24,15 +24,15 @@ button{padding:14px 36px;font-size:19px;border:none;border-radius:30px;backgroun
 <div id="basket">🧺</div>
 
 <div id="overlay">
-<h1 id="title">Atrapa Corazones</h1>
-<p id="sub">❤️ = +1 punto<br>⭐ = +5 + vida<br>💣 = -1 vida<br>Cada 20 pts más rápido</p>
+<h1 id="title">Lluvia de buena suerte</h1>
+<p id="sub">❤️ = +1 punto<br>⭐ = +5 + vida extra<br>💣 = -1 vida<br>Cada 20 pts más rápido</p>
 <p id="final"></p>
 <button onclick="startGame()">JUGAR</button>
 <button id="share" onclick="shareScore()">COMPARTIR MI SCORE</button>
 </div>
 
 <script>
-let score=0,lost=0,playing=false,best=localStorage.getItem('best')||0,level=1,basket=document.getElementById('basket'),interval;
+let score=0,lost=0,playing=false,best=localStorage.getItem('best_gigi')||0,level=1,basket=document.getElementById('basket'),interval;
 
 document.getElementById('best').innerText='Récord: '+best;
 
@@ -42,7 +42,6 @@ document.getElementById('overlay').style.display='none';
 document.getElementById('share').style.display='none';
 updateUI(); clearInterval(interval);
 spawnLoop();
-moveBasket();
 }
 
 function spawnLoop(){
@@ -62,7 +61,6 @@ let el=document.createElement('div'); el.className='item';
 if(type==='heart'){el.innerHTML='❤️'; el.dataset.type='heart'}
 if(type==='star'){el.innerHTML='⭐'; el.dataset.type='star'; el.style.fontSize='38px'}
 if(type==='bomb'){el.innerHTML='💣'; el.dataset.type='bomb'}
-
 el.style.left=Math.random()*85+'vw';
 el.style.animationDuration=(1.5+Math.random()*1.5)+'s';
 document.body.appendChild(el);
@@ -71,4 +69,30 @@ let check=setInterval(()=>{
 if(!playing){clearInterval(check); el.remove(); return;}
 let er=el.getBoundingClientRect(); let br=basket.getBoundingClientRect();
 if(er.bottom>br.top && er.left<br.right && er.right>br.left){
- if(type==='heart'){score+=1; popText('+1',er.left,
+ if(type==='heart'){score+=1; popText('+1',er.left,er.top)}
+ if(type==='star'){score+=5; lost=Math.max(0,lost-1); popText('+5 ✨',er.left,er.top)}
+ if(type==='bomb'){lost+=1; popText('-1 💥',er.left,er.top)}
+ updateUI(); el.remove(); clearInterval(check);
+ if(score>0 && score%20===0){level++; spawnLoop(); popText('NIVEL '+level+'!',window.innerWidth/2,200)}
+ navigator.vibrate && navigator.vibrate(type==='bomb'?150:30);
+}
+if(er.top>window.innerHeight){
+ if(type==='heart') lost++;
+ updateUI(); el.remove(); clearInterval(check);
+ if(lost>=5) endGame();
+}
+},16);
+setTimeout(()=>{el.remove(); clearInterval(check)},4000);
+}
+
+function popText(t,x,y){
+let m=document.createElement('div'); m.className='msg'; m.innerText=t;
+m.style.left=x+'px'; m.style.top=y+'px'; document.body.appendChild(m);
+setTimeout(()=>m.remove(),1000);
+}
+
+function updateUI(){
+document.getElementById('score').innerText='❤️ '+score+' Lv'+level;
+let hearts='💔'.repeat(5-lost)+'🖤'.repeat(lost);
+document.getElementById('lives').innerText=hearts;
+let bg=['linear-gradient(#ff8fab,#ff4d6d)','linear-gradient(#ff7eb8,#7c4dff)','linear-gradient(#7c4dff,#
