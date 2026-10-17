@@ -1,10 +1,104 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Lluvia de buena suerte</title><style>html,body{margin:0;height:100%}body{font-family:system-ui;background:radial-gradient(120% 120% at 50% 0%,#ff9bb3,#ff4d6d 45%,#a81e3a 100%);overflow:hidden;touch-action:none}#top{position:fixed;top:0;width:100%;display:flex;justify-content:space-between;padding:12px 16px;color:#fff;font-weight:800;z-index:10;pointer-events:none}#top div{background:rgba(255,255,255,.25);backdrop-filter:blur(10px);padding:8px 14px;border-radius:20px}#b{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);font-size:62px;z-index:9}#ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99;color:#fff;text-align:center;padding:24px}button{margin-top:20px;padding:18px 46px;font-size:22px;border:0;border-radius:30px;background:#fff;color:#ff4d6d;font-weight:900}.item{position:fixed;top:-60px;font-size:38px;animation:fall linear forwards}@keyframes fall{to{transform:translateY(110vh)}}.pop{position:fixed;color:#fff;font-weight:900;text-shadow:0 2px 6px #000;animation:up .9s forwards}@keyframes up{to{transform:translateY(-70px);opacity:0}}</style></head><body><div id="top"><div id="sc">❤️ 0</div><div id="lv">Lv1</div><div id="best">🏆 0</div></div><div id="b">🧺</div><div id="ov"><h1 style="font-size:48px;line-height:.9">Lluvia<br>de buena suerte</h1><p style="margin-top:10px">Solo corazones ❤️</p><button id="play">JUGAR</button></div><script>
-let score=0,level=1,timeLeft=20,playing=false,spawnInt,levelInt,b=document.getElementById('b'),best=localStorage.getItem('best_gigi')||0;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Lluvia de buena suerte</title>
+<style>
+/* --- ESTILOS GENERALES --- */
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+ font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+ background:radial-gradient(120% 120% at 50% 0%,#ff9bb3,#ff4d6d 45%,#a81e3a 100%);
+ height:100vh;overflow:hidden;touch-action:none;user-select:none
+}
+/* Barra superior */
+#top{
+ position:fixed;top:0;width:100%;display:flex;
+ justify-content:space-between;padding:14px 18px;
+ color:white;font-weight:700;z-index:10;pointer-events:none
+}
+#top div{
+ background:rgba(255,255,255,.2);backdrop-filter:blur(12px);
+ padding:8px 16px;border-radius:20px
+}
+/* Canasta */
+#b{
+ position:fixed;bottom:30px;left:50%;
+ transform:translateX(-50%);font-size:64px;z-index:5;
+ filter:drop-shadow(0 8px 12px rgba(0,0,0,.3))
+}
+/* Corazones cayendo */
+.item{
+ position:fixed;top:-70px;font-size:38px;
+ animation:fall linear forwards;will-change:transform;
+ filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))
+}
+@keyframes fall{to{transform:translateY(120vh) rotate(20deg)}}
+/* Mensaje +1 */
+.pop{
+ position:fixed;color:white;font-weight:900;
+ text-shadow:0 2px 8px #000;animation:up .9s forwards;
+ pointer-events:none
+}
+@keyframes up{to{transform:translateY(-70px);opacity:0}}
+</style>
+</head>
+<body>
+<!-- UI -->
+<div id="top"><div id="sc">❤️ 0</div><div id="lv">Lv1 • 20s</div><div id="best">🏆 0</div></div>
+<div id="b">🧺</div>
+<script>
+// --- VARIABLES DEL JUEGO ---
+let score=0,level=1,timeLeft=20,b=document.getElementById('b');
+let spawnInt,levelInt,best=localStorage.getItem('best_gigi')||0;
 document.getElementById('best').textContent='🏆 '+best;
-function start(){console.log('start');score=0;level=1;timeLeft=20;playing=true;document.getElementById('ov').style.display='none';upd();clearInterval(spawnInt);clearInterval(levelInt);spawn();loopSpawn();loopLevel()}
-function loopSpawn(){clearInterval(spawnInt);spawnInt=setInterval(spawn, Math.max(150,650-level*80))}
-function loopLevel(){clearInterval(levelInt);levelInt=setInterval(()=>{if(!playing)return;timeLeft--;if(timeLeft<=0){level++;timeLeft=20;loopSpawn()}upd()},1000)}
-function spawn(){if(!playing)return;let el=document.createElement('div');el.className='item';el.textContent='❤️';el.style.left=(Math.random()*88)+'vw';el.style.animationDuration=(1.1+Math.random()*1)+'s';document.body.appendChild(el);let chk=setInterval(()=>{let er=el.getBoundingClientRect(),br=b.getBoundingClientRect();if(er.bottom>br.top&&er.left<br.right&&er.right>br.left){score++;if(score>best){best=score;localStorage.setItem('best_gigi',best)}upd();el.remove();clearInterval(chk)}if(er.top>window.innerHeight){el.remove();clearInterval(chk)}},16);setTimeout(()=>{el.remove();clearInterval(chk)},4000)}
-function upd(){document.getElementById('sc').textContent='❤️ '+score;document.getElementById('lv').textContent='Lv'+level+' • '+timeLeft+'s';document.getElementById('best').textContent='🏆 '+best}
-function move(x){if(!playing)return;let max=innerWidth-b.offsetWidth;let p=Math.min(Math.max(0,x-b.offsetWidth/2),max);b.style.left=p+'px';b.style.transform='translateX(0)'}
-document.getElementById('play').onclick=start;
+
+// --- INICIO AUTOMATICO ---
+function start(){
+ score=0;level=1;timeLeft=20;upd();
+ clearInterval(spawnInt);clearInterval(levelInt);
+ spawn();loopSpawn();loopLevel();
+}
+// Control de velocidad
+function loopSpawn(){
+ clearInterval(spawnInt);
+ let speed=Math.max(150,650-level*80);
+ spawnInt=setInterval(spawn,speed);
+}
+// Control de nivel cada 20s
+function loopLevel(){
+ clearInterval(levelInt);
+ levelInt=setInterval(()=>{
+  timeLeft--;
+  if(timeLeft<=0){
+   level++;timeLeft=20;loopSpawn();
+   popMsg('¡NIVEL '+level+'!',innerWidth/2,120);
+  }
+  upd();
+ },1000);
+}
+// Crear corazon
+function spawn(){
+ let el=document.createElement('div');
+ el.className='item';el.textContent='❤️';
+ el.style.left=Math.random()*88+'vw';
+ el.style.animationDuration=(1.1+Math.random()*1.2)+'s';
+ document.body.appendChild(el);
+ // Detectar colision
+ let chk=setInterval(()=>{
+  let er=el.getBoundingClientRect(),br=b.getBoundingClientRect();
+  if(er.bottom>br.top&&er.left<br.right&&er.right>br.left){
+   score++;if(score>best){best=score;localStorage.setItem('best_gigi',best)}
+   upd();popMsg('+1',er.left,er.top);
+   navigator.vibrate&&navigator.vibrate(30);
+   el.remove();clearInterval(chk);
+  }
+  if(er.top>innerHeight){el.remove();clearInterval(chk)}
+ },16);
+ setTimeout(()=>{el.remove();clearInterval(chk)},4000);
+}
+// Mensajes flotantes
+function popMsg(t,x,y){
+ let m=document.createElement('div');m.className='pop';
+ m
